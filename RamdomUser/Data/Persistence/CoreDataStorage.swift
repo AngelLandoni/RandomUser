@@ -25,17 +25,29 @@ final class CoreDataStorage: PersistenceStorageProtocol {
     func saveUsers(_ users: [UserDomainModel]) async {
         await context.perform {
             for user in users {
-                let entity = UserEntity(context: self.context)
-                entity.id = user.id
-                entity.name = user.firstName
-                entity.surname = user.lastName
-                entity.email = user.email
-                entity.phone = user.phone
-                entity.picture = user.picture
-                entity.thumbnail = user.thumbnail
-                entity.gender = user.gender
-                entity.location = user.location
-                entity.registeredDate = user.registeredDate
+                let fetchRequest: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
+                fetchRequest.predicate = NSPredicate(format: "id == %@", user.id)
+                fetchRequest.fetchLimit = 1
+                
+                do {
+                    let existingUsers = try self.context.fetch(fetchRequest)
+                    if existingUsers.isEmpty {
+                        // Create new entity if not found
+                        let entity = UserEntity(context: self.context)
+                        entity.id = user.id
+                        entity.name = user.firstName
+                        entity.surname = user.lastName
+                        entity.email = user.email
+                        entity.phone = user.phone
+                        entity.picture = user.picture
+                        entity.thumbnail = user.thumbnail
+                        entity.gender = user.gender
+                        entity.location = user.location
+                        entity.registeredDate = user.registeredDate
+                    }
+                } catch {
+                    print("Failed to check for duplicate user: \(error)")
+                }
             }
             self.saveContext()
         }
@@ -71,12 +83,12 @@ final class CoreDataStorage: PersistenceStorageProtocol {
     
     func banUser(by id: String) async {
         await context.perform {
-            let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "id == %@", id)
-            
             do {
-                let existingBan = try self.context.fetch(fetchRequest).first
-                if existingBan == nil {
+                let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
+                fetchRequest.predicate = NSPredicate(format: "id == %@", id)
+                fetchRequest.fetchLimit = 1
+
+                if try self.context.count(for: fetchRequest) == 0 {
                     let bannedUser = BannedUserEntity(context: self.context)
                     bannedUser.id = id
                     self.saveContext()
@@ -90,7 +102,7 @@ final class CoreDataStorage: PersistenceStorageProtocol {
     func isUserBanned(by id: String) -> Bool {
         let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", id)
-
+        
         do {
             let count = try context.count(for: fetchRequest)
             return count > 0

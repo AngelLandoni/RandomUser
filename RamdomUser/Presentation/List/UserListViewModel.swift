@@ -22,10 +22,21 @@ class UserListViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
+    convenience init() {
+        let repo = UserRepository()
+        let fetchUsersUseCase = FetchUsersUseCase(repository: repo)
+        let fetchStoredUsersUseCase = FetchStoredUsersUseCase(repository: UserRepository())
+        let deleteUserUseCase = DeleteUserUseCase(repository: UserRepository())
+
+        self.init(fetchUsersUseCase: fetchUsersUseCase,
+                  fetchStoredUsersUseCase: fetchStoredUsersUseCase,
+                  deleteUserUseCase: deleteUserUseCase)
+    }
+    
     init(
-        fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository()),
-        fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol = FetchStoredUsersUseCase(repository: UserRepository()),
-        deleteUserUseCase: DeleteUserUseCaseProtocol = DeleteUserUseCase(repository: UserRepository())
+        fetchUsersUseCase: FetchUsersUseCaseProtocol,
+        fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol,
+        deleteUserUseCase: DeleteUserUseCaseProtocol
     ) {
         self.fetchUsersUseCase = fetchUsersUseCase
         self.fetchStoredUsersUseCase = fetchStoredUsersUseCase
