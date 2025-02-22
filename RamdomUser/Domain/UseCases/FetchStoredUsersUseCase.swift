@@ -17,13 +17,22 @@ final class FetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol {
         var seenIDs = Set<String>()
         var uniqueUsers: [UserDomainModel] = []
         
-        for user in users {
-            guard !seenIDs.contains(user.id) else { continue }
-            let isBanned = await repository.isUserBanned(user.id)
-            guard !isBanned else { continue }
+        await withTaskGroup(of: (UserDomainModel, Bool).self) { group in
+            for user in users {
+                guard !seenIDs.contains(user.id) else { continue }
+                seenIDs.insert(user.id)
+                
+                group.addTask {
+                    let isBanned = await self.repository.isUserBanned(user.id)
+                    return (user, isBanned)
+                }
+            }
             
-            seenIDs.insert(user.id)
-            uniqueUsers.append(user)
+            for await (user, isBanned) in group {
+                if !isBanned {
+                    uniqueUsers.append(user)
+                }
+            }
         }
         
         return uniqueUsers
