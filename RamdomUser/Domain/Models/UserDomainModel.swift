@@ -24,8 +24,8 @@ extension UserDomainModel {
             picture: self.picture,
             thumbnail: self.thumbnail,
             gender: self.gender.capitalized,
-            location: formattedDate,
-            regsiteredDate: self.location,
+            location: self.location,
+            regsiteredDate: formattedDate,
             email: self.email
         )
     }
