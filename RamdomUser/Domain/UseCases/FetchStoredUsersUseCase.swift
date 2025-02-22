@@ -6,13 +6,21 @@ protocol FetchStoredUsersUseCaseProtocol {
 
 final class FetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol {
     private let repository: UserRepositoryProtocol
-
+    
     init(repository: UserRepositoryProtocol) {
         self.repository = repository
     }
-
+    
     func execute() async -> [UserDomainModel] {
         let users = await repository.fetchStoredUsers()
-        return Array(Set(users))
+        
+        var seenIDs = Set<String>()
+        let uniqueUsers = users.filter { user in
+            guard !seenIDs.contains(user.id) else { return false }
+            seenIDs.insert(user.id)
+            return true
+        }
+        
+        return uniqueUsers
     }
 }
