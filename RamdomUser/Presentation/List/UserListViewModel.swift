@@ -15,18 +15,21 @@ class UserListViewModel: ObservableObject {
     @Published var errorLoadingExtraUsers = false
     
     private var users: [UserPresentationModel] = []
-
+    
     private let fetchUsersUseCase: FetchUsersUseCaseProtocol
     private let fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol
-
+    private let deleteUserUseCase: DeleteUserUseCaseProtocol
+    
     private var cancellables = Set<AnyCancellable>()
     
     init(
         fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository()),
-        fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol = FetchStoredUsersUseCase(repository: UserRepository())
+        fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol = FetchStoredUsersUseCase(repository: UserRepository()),
+        deleteUserUseCase: DeleteUserUseCaseProtocol = DeleteUserUseCase(repository: UserRepository())
     ) {
         self.fetchUsersUseCase = fetchUsersUseCase
         self.fetchStoredUsersUseCase = fetchStoredUsersUseCase
+        self.deleteUserUseCase = deleteUserUseCase
         setupSearchListener()
     }
     
@@ -44,7 +47,13 @@ class UserListViewModel: ObservableObject {
         isLoadingFirstTime = false
     }
     
-    func deleteUser(user: UserPresentationModel) {}
+    func deleteUser(index: IndexSet) async {
+        for element in index {
+            await deleteUserUseCase.execute(id: users[element].id)
+        }
+        users.remove(atOffsets: index)
+        syncFilteredUsers()
+    }
     
     func onNewCellAppear(userID: String) {
         guard searchText.isEmpty else {
@@ -52,13 +61,13 @@ class UserListViewModel: ObservableObject {
             return
         }
         guard userID == filteredUsers.last?.id else { return }
-
+        
         shouldShowLoadingRow = true
-
+        
         Task.detached {
             await self.loadExtraUsers()
         }
-
+        
         shouldShowLoadingRow = false
     }
     
@@ -92,7 +101,7 @@ class UserListViewModel: ObservableObject {
                     filteredUsers = self.users
                     return
                 }
-                                
+                
                 filteredUsers = users.filter { user in
                     user.name.lowercased().contains(self.searchText.lowercased()) ||
                     user.surname.lowercased().contains(self.searchText.lowercased())

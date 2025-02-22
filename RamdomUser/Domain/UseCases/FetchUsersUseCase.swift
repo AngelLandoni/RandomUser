@@ -13,6 +13,6 @@ final class FetchUsersUseCase: FetchUsersUseCaseProtocol {
 
     func execute() async throws -> [UserDomainModel] {
         let users = try await repository.fetchUsers()
-        return Array(Set(users))
+        return Array(Set(users.filter { !repository.isUserBanned($0.id) }))
     }
 }

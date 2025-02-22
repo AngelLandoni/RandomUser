@@ -8,6 +8,8 @@ protocol UserRepositoryProtocol {
     func fetchUsers() async throws -> [UserDomainModel]
     func fetchStoredUsers() async -> [UserDomainModel]
     func deleteUser(_ userID: String) async
+    func banUser(_ userID: String) async
+    func isUserBanned(_ userID: String) -> Bool
 }
 
 final class UserRepository: UserRepositoryProtocol {
@@ -37,5 +39,13 @@ final class UserRepository: UserRepositoryProtocol {
     
     func deleteUser(_ userID: String) async {
         await storage.deleteUser(by: userID)
+    }
+    
+    func banUser(_ userID: String) async {
+        await storage.banUser(by: userID)
+    }
+    
+    func isUserBanned(_ userID: String) -> Bool {
+        storage.isUserBanned(by: userID)
     }
 }

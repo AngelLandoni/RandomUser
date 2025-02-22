@@ -8,46 +8,35 @@ struct UserListView: View {
             if viewModel.isLoadingFirstTime {
                 ProgressView("Loading users...")
             } else if viewModel.errorLoadingUsers {
-                VStack {
-                    Text("Error loading users")
-                    Button("Retry") {
-                        Task {
-                            await viewModel.initialLoad()
-                        }
+                LoadingUsersError {
+                    Task.detached {
+                        await viewModel.initialLoad()
                     }
                 }
             } else {
-                let users = viewModel.filteredUsers
-                
-                Group {
-                    if users.isEmpty {
-                        Text("No users")
-                    } else {
-                        List {
-                            ForEach(viewModel.filteredUsers) { user in
-                                NavigationLink(destination: UserDetailView(user: user)) {
-                                    UserRow(name: user.name, surname: user.surname, picture: user.thumbnail) {
-                                        viewModel.deleteUser(user: user)
-                                    }
-                                }
-                                .onAppear {
-                                    viewModel.onNewCellAppear(userID: user.id)
-                                }
-                            }
-                            
-                            if viewModel.errorLoadingExtraUsers {
-                                VStack {
-                                    Text("Error loading users")
-                                    Button("Retry") {
-                                        Task.detached {
-                                            await viewModel.retryLoadExtraUsers()
-                                        }
-                                    }
-                                }
-                            } else if viewModel.shouldShowLoadingRow {
-                                Text("Loading")
+                List {
+                    ForEach(viewModel.filteredUsers) { user in
+                        NavigationLink(destination: UserDetailView(user: user)) {
+                            UserRow(name: user.name, surname: user.surname, picture: user.thumbnail)
+                        }
+                        .onAppear {
+                            viewModel.onNewCellAppear(userID: user.id)
+                        }
+                    }
+                    .onDelete { index in
+                        Task.detached {
+                            await viewModel.deleteUser(index: index)
+                        }
+                    }
+                    
+                    if viewModel.errorLoadingExtraUsers {
+                        LoadingUsersError {
+                            Task.detached {
+                                await viewModel.retryLoadExtraUsers()
                             }
                         }
+                    } else if viewModel.shouldShowLoadingRow {
+                        Text("Loading")
                     }
                 }
                 .searchable(text: $viewModel.searchText, prompt: "Search by name, surname, or email")
@@ -65,8 +54,6 @@ private struct UserRow: View {
     let surname: String
     let picture: String
     
-    let onDelete: () -> Void
-    
     var body: some View {
         HStack {
             AsyncImage(url: URL(string: picture)) { image in
@@ -80,11 +67,6 @@ private struct UserRow: View {
             VStack(alignment: .leading) {
                 Text("\(name) \(surname)")
                     .font(.headline)
-            }
-            Spacer()
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red)
             }
         }
     }

@@ -17,6 +17,8 @@ final class FetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol {
         var seenIDs = Set<String>()
         let uniqueUsers = users.filter { user in
             guard !seenIDs.contains(user.id) else { return false }
+            guard !repository.isUserBanned(user.id) else { return false }
+            
             seenIDs.insert(user.id)
             return true
         }
