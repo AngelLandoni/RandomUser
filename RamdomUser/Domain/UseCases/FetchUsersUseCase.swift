@@ -13,6 +13,24 @@ final class FetchUsersUseCase: FetchUsersUseCaseProtocol {
 
     func execute() async throws -> [UserDomainModel] {
         let users = try await repository.fetchUsers()
-        return Array(Set(users.filter { !repository.isUserBanned($0.id) }))
+        
+        var uniqueUsers = Set<UserDomainModel>()
+        
+        await withTaskGroup(of: (UserDomainModel, Bool).self) { group in
+            for user in users {
+                group.addTask {
+                    let isBanned = await self.repository.isUserBanned(user.id)
+                    return (user, isBanned)
+                }
+            }
+            
+            for await (user, isBanned) in group {
+                if !isBanned {
+                    uniqueUsers.insert(user)
+                }
+            }
+        }
+        
+        return Array(uniqueUsers)
     }
 }

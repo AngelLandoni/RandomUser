@@ -15,12 +15,15 @@ final class FetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol {
         let users = await repository.fetchStoredUsers()
         
         var seenIDs = Set<String>()
-        let uniqueUsers = users.filter { user in
-            guard !seenIDs.contains(user.id) else { return false }
-            guard !repository.isUserBanned(user.id) else { return false }
+        var uniqueUsers: [UserDomainModel] = []
+        
+        for user in users {
+            guard !seenIDs.contains(user.id) else { continue }
+            let isBanned = await repository.isUserBanned(user.id)
+            guard !isBanned else { continue }
             
             seenIDs.insert(user.id)
-            return true
+            uniqueUsers.append(user)
         }
         
         return uniqueUsers

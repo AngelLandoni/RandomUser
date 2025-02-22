@@ -2,6 +2,7 @@ import Foundation
 
 private enum Constants {
     static let pageSize = 40
+    static let baseURL = "https://randomuser.me/api/"
 }
 
 protocol UserRepositoryProtocol {
@@ -9,32 +10,36 @@ protocol UserRepositoryProtocol {
     func fetchStoredUsers() async -> [UserDomainModel]
     func deleteUser(_ userID: String) async
     func banUser(_ userID: String) async
-    func isUserBanned(_ userID: String) -> Bool
+    func isUserBanned(_ userID: String) async -> Bool
 }
 
 final class UserRepository: UserRepositoryProtocol {
     private let apiClient: APIClientProtocol
     private let storage: PersistenceStorageProtocol
 
-    private let url = URL(string: "https://randomuser.me/api/?results=\(Constants.pageSize)")!
-    
-    init(apiClient: APIClientProtocol = APIClient(),
-         storage: PersistenceStorageProtocol = CoreDataStorage()) {
+    private let url: URL?
+
+    init(
+        apiClient: APIClientProtocol = APIClient(),
+        storage: PersistenceStorageProtocol = CoreDataStorage()
+    ) {
         self.apiClient = apiClient
         self.storage = storage
+        self.url = URL(string: "\(Constants.baseURL)?results=\(Constants.pageSize)")
     }
     
     func fetchUsers() async throws -> [UserDomainModel] {
+        guard let url = url else { throw URLError(.badURL) }
+        
         let response: UserAPIResponse = try await apiClient.fetch(url: url)
         let users = response.results.map { $0.toDomain() }
         
         await storage.saveUsers(users)
-        
         return users
     }
     
     func fetchStoredUsers() async -> [UserDomainModel] {
-        return await storage.fetchUsers()
+        await storage.fetchUsers()
     }
     
     func deleteUser(_ userID: String) async {
@@ -45,7 +50,7 @@ final class UserRepository: UserRepositoryProtocol {
         await storage.banUser(by: userID)
     }
     
-    func isUserBanned(_ userID: String) -> Bool {
-        storage.isUserBanned(by: userID)
+    func isUserBanned(_ userID: String) async -> Bool {
+        await storage.isUserBanned(by: userID)
     }
 }

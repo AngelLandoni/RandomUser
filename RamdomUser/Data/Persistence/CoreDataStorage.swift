@@ -6,7 +6,7 @@ protocol PersistenceStorageProtocol {
     func fetchUsers() async -> [UserDomainModel]
     func deleteUser(by id: String) async
     func banUser(by id: String) async
-    func isUserBanned(by id: String) -> Bool
+    func isUserBanned(by id: String) async -> Bool
 }
 
 final class CoreDataStorage: PersistenceStorageProtocol {
@@ -99,36 +99,41 @@ final class CoreDataStorage: PersistenceStorageProtocol {
         }
     }
     
-    func isUserBanned(by id: String) -> Bool {
-        let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", id)
-        
-        do {
-            let count = try context.count(for: fetchRequest)
-            return count > 0
-        } catch {
-            print("Failed to check if user is banned: \(error)")
-            return false
+    func isUserBanned(by userID: String) async -> Bool {
+        await context.perform {
+            let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@", userID)
+            
+            do {
+                return try self.context.count(for: fetchRequest) > 0
+            } catch {
+                print("Failed to check if user is banned: \(error)")
+                return false
+            }
         }
     }
     
-    private func fetchBannedUserIDs() -> Set<String> {
-        let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
-        do {
-            let bannedUsers = try context.fetch(fetchRequest)
-            return Set(bannedUsers.compactMap { $0.id })
-        } catch {
-            print("Failed to fetch banned users: \(error)")
-            return []
+    private func fetchBannedUserIDs() async -> Set<String> {
+        await context.perform {
+            let fetchRequest: NSFetchRequest<BannedUserEntity> = BannedUserEntity.fetchRequest()
+            do {
+                let bannedUsers = try self.context.fetch(fetchRequest)
+                return Set(bannedUsers.compactMap { $0.id })
+            } catch {
+                print("Failed to fetch banned users: \(error)")
+                return []
+            }
         }
     }
     
     private func saveContext() {
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                print("Failed to save Core Data context: \(error)")
+        context.perform {
+            if self.context.hasChanges {
+                do {
+                    try self.context.save()
+                } catch {
+                    print("Failed to save Core Data context: \(error)")
+                }
             }
         }
     }
