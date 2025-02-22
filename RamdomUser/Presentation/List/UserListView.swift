@@ -2,27 +2,42 @@ import SwiftUI
 
 struct UserListView: View {
     @StateObject private var viewModel = UserListViewModel()
-
+    
     var body: some View {
         NavigationView {
-            List {
-                ForEach(viewModel.filteredUsers) { user in
-                    NavigationLink(destination: UserDetailView(user: user)) {
-                        UserRow(name: user.name, surname: user.surname, picture: user.picture) {
-                            viewModel.deleteUser(user: user)
-                        }
-                    }
-                    .onAppear {
-                        if user.id == viewModel.filteredUsers.last?.id {
-                            Task.detached {
-                                await viewModel.scrollReachedBottom()
+            if viewModel.isLoadingFirstTime {
+                ProgressView("Loading users...")
+            } else {
+                let users = viewModel.filteredUsers
+                
+                Group {
+                    if users.isEmpty {
+                        Text("No users")
+                    } else {
+                        List {
+                            ForEach(viewModel.filteredUsers) { user in
+                                NavigationLink(destination: UserDetailView(user: user)) {
+                                    UserRow(name: user.name, surname: user.surname, picture: user.thumbnail) {
+                                        viewModel.deleteUser(user: user)
+                                    }
+                                }
+                                .onAppear {
+                                    if user.id == viewModel.filteredUsers.last?.id {
+                                        Task.detached {
+                                            await viewModel.scrollReachedBottom()
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                .searchable(text: $viewModel.searchText, prompt: "Search by name, surname, or email")
+                .navigationTitle("Users")
             }
-            .searchable(text: $viewModel.searchText, prompt: "Search by name, surname, or email")
-            .navigationTitle("Users")
+        }
+        .task {
+            await viewModel.initialLoad()
         }
     }
 }
@@ -33,7 +48,7 @@ private struct UserRow: View {
     let picture: String
     
     let onDelete: () -> Void
-
+    
     var body: some View {
         HStack {
             AsyncImage(url: URL(string: picture)) { image in
@@ -43,7 +58,7 @@ private struct UserRow: View {
             }
             .frame(width: 50, height: 50)
             .clipShape(Circle())
-
+            
             VStack(alignment: .leading) {
                 Text("\(name) \(surname)")
                     .font(.headline)

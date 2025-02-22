@@ -5,7 +5,7 @@ struct UserDetailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            AsyncImage(url: URL(string: user.largePicture)) { image in
+            AsyncImage(url: URL(string: user.picture)) { image in
                 image.resizable().scaledToFit()
             } placeholder: {
                 ProgressView()
@@ -17,7 +17,7 @@ struct UserDetailView: View {
                 .font(.title2)
             Text("Gender: \(user.gender)")
             Text("Email: \(user.email)")
-            Text("Location: \(user.locationStreet) \(user.locationCity), \(user.locationState)")
+            Text("Location: \(user.location)")
             Text("Registered: \(user.regsiteredDate)")
             Spacer()
         }
