@@ -14,15 +14,12 @@ class UserListViewModel: ObservableObject {
     var users: [UserPresentationModel] = []
 
     private let fetchUsersUseCase: FetchUsersUseCaseProtocol
-    private let filterUsersUseCase: FilterUsersUseCaseProtocol
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository()),
-        filterUsersUseCase: FilterUsersUseCaseProtocol = FilterUsersUseCase()
+        fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository())
     ) {
         self.fetchUsersUseCase = fetchUsersUseCase
-        self.filterUsersUseCase = filterUsersUseCase
         setupSearchListener()
     }
     
