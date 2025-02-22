@@ -33,7 +33,7 @@
 		870BB7472D69AB44001F78D5 /* Exceptions for "RamdomUser" folder in "RamdomUser" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 870BB71B2D69AB41001F78D5 /* RamdomUser */;
 		};
