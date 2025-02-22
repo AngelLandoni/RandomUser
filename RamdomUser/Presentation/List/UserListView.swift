@@ -7,6 +7,15 @@ struct UserListView: View {
         NavigationView {
             if viewModel.isLoadingFirstTime {
                 ProgressView("Loading users...")
+            } else if viewModel.errorLoadingUsers {
+                VStack {
+                    Text("Error loading users")
+                    Button("Retry") {
+                        Task {
+                            await viewModel.initialLoad()
+                        }
+                    }
+                }
             } else {
                 let users = viewModel.filteredUsers
                 
@@ -22,12 +31,21 @@ struct UserListView: View {
                                     }
                                 }
                                 .onAppear {
-                                    if user.id == viewModel.filteredUsers.last?.id {
+                                    viewModel.onNewCellAppear(userID: user.id)
+                                }
+                            }
+                            
+                            if viewModel.errorLoadingExtraUsers {
+                                VStack {
+                                    Text("Error loading users")
+                                    Button("Retry") {
                                         Task.detached {
-                                            await viewModel.scrollReachedBottom()
+                                            await viewModel.retryLoadExtraUsers()
                                         }
                                     }
                                 }
+                            } else {
+                                Text("Loading")
                             }
                         }
                     }

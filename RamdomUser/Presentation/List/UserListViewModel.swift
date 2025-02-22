@@ -10,6 +10,8 @@ class UserListViewModel: ObservableObject {
     @Published var filteredUsers: [UserPresentationModel] = []
     @Published var searchText: String = ""
     @Published var isLoadingFirstTime = false
+    @Published var errorLoadingUsers = false
+    @Published var errorLoadingExtraUsers = false
     
     var users: [UserPresentationModel] = []
 
@@ -28,16 +30,45 @@ class UserListViewModel: ObservableObject {
         do {
             let users = try await fetchUsersUseCase.execute()
             self.users = users.map { $0.toPresentation() }
-            self.filteredUsers = self.users
+            syncFilteredUsers()
         } catch {
-            print("Error fetching users: \(error)")
+            errorLoadingUsers = true
         }
         isLoadingFirstTime = false
     }
     
-    func scrollReachedBottom() async { }
+    func scrollReachedBottom() async {
+        
+    }
     
     func deleteUser(user: UserPresentationModel) {}
+    
+    func onNewCellAppear(userID: String) {
+        guard userID == filteredUsers.last?.id else { return }
+
+        Task.detached {
+            await self.loadExtraUsers()
+        }
+    }
+    
+    func retryLoadExtraUsers() async {
+        errorLoadingExtraUsers = false
+        await self.loadExtraUsers()
+    }
+    
+    private func syncFilteredUsers() {
+        self.filteredUsers = self.users
+    }
+    
+    private func loadExtraUsers() async {
+        do {
+            let users = try await fetchUsersUseCase.execute()
+            self.users += users.map { $0.toPresentation() }
+            syncFilteredUsers()
+        } catch {
+            errorLoadingExtraUsers = true
+        }
+    }
     
     private func setupSearchListener() {
         $searchText
