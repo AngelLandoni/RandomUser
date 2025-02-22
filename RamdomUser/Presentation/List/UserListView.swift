@@ -44,7 +44,7 @@ struct UserListView: View {
                                         }
                                     }
                                 }
-                            } else {
+                            } else if viewModel.shouldShowLoadingRow {
                                 Text("Loading")
                             }
                         }

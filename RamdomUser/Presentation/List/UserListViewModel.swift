@@ -10,6 +10,7 @@ class UserListViewModel: ObservableObject {
     @Published var filteredUsers: [UserPresentationModel] = []
     @Published var searchText: String = ""
     @Published var isLoadingFirstTime = false
+    @Published var shouldShowLoadingRow = false
     @Published var errorLoadingUsers = false
     @Published var errorLoadingExtraUsers = false
     
@@ -46,11 +47,19 @@ class UserListViewModel: ObservableObject {
     func deleteUser(user: UserPresentationModel) {}
     
     func onNewCellAppear(userID: String) {
+        guard searchText.isEmpty else {
+            shouldShowLoadingRow = false
+            return
+        }
         guard userID == filteredUsers.last?.id else { return }
+
+        shouldShowLoadingRow = true
 
         Task.detached {
             await self.loadExtraUsers()
         }
+
+        shouldShowLoadingRow = false
     }
     
     func retryLoadExtraUsers() async {
