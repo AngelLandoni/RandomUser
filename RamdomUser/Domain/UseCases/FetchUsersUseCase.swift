@@ -13,7 +13,6 @@ final class FetchUsersUseCase: FetchUsersUseCaseProtocol {
 
     func execute() async throws -> [UserDomainModel] {
         let users = try await repository.fetchUsers()
-        
         var uniqueUsers = Set<UserDomainModel>()
         
         await withTaskGroup(of: (UserDomainModel, Bool).self) { group in
