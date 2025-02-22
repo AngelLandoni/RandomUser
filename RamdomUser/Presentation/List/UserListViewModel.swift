@@ -13,32 +13,34 @@ class UserListViewModel: ObservableObject {
     @Published var errorLoadingUsers = false
     @Published var errorLoadingExtraUsers = false
     
-    var users: [UserPresentationModel] = []
+    private var users: [UserPresentationModel] = []
 
     private let fetchUsersUseCase: FetchUsersUseCaseProtocol
+    private let fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol
+
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository())
+        fetchUsersUseCase: FetchUsersUseCaseProtocol = FetchUsersUseCase(repository: UserRepository()),
+        fetchStoredUsersUseCase: FetchStoredUsersUseCaseProtocol = FetchStoredUsersUseCase(repository: UserRepository())
     ) {
         self.fetchUsersUseCase = fetchUsersUseCase
+        self.fetchStoredUsersUseCase = fetchStoredUsersUseCase
         setupSearchListener()
     }
     
     func initialLoad() async {
         isLoadingFirstTime = true
-        do {
-            let users = try await fetchUsersUseCase.execute()
-            self.users = users.map { $0.toPresentation() }
-            syncFilteredUsers()
-        } catch {
-            errorLoadingUsers = true
-        }
-        isLoadingFirstTime = false
-    }
-    
-    func scrollReachedBottom() async {
         
+        let storedUsers = await fetchStoredUsersUseCase.execute()
+        if storedUsers.isEmpty {
+            await loadExtraUsers()
+        } else {
+            users = storedUsers.map { $0.toPresentation() }
+            syncFilteredUsers()
+        }
+        
+        isLoadingFirstTime = false
     }
     
     func deleteUser(user: UserPresentationModel) {}

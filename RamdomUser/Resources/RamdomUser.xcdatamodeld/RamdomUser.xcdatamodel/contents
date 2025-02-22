@@ -10,5 +10,6 @@
         <attribute name="picture" optional="YES" attributeType="String"/>
         <attribute name="registeredDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="surname" optional="YES" attributeType="String"/>
+        <attribute name="thumbnail" optional="YES" attributeType="String"/>
     </entity>
 </model>
