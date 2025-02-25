@@ -1,6 +1,10 @@
 import CoreData
 import Foundation
 
+private enum Constans {
+    static let randomUserContainer = "RamdomUser"
+}
+
 protocol PersistenceStorageProtocol {
     func saveUsers(_ users: [UserDomainModel]) async
     func fetchUsers() async -> [UserDomainModel]
@@ -13,11 +17,11 @@ final class CoreDataStorage: PersistenceStorageProtocol {
     private let container: NSPersistentContainer
     private var context: NSManagedObjectContext { container.viewContext }
     
-    init() {
-        container = NSPersistentContainer(name: "RamdomUser")
+    init(container: NSPersistentContainer = NSPersistentContainer(name: Constans.randomUserContainer)) {
+        self.container = container
         container.loadPersistentStores { _, error in
             if let error = error {
-                fatalError("Failed to load Core Data store: \(error)")
+                print("Failed to load Core Data store: \(error)")
             }
         }
     }

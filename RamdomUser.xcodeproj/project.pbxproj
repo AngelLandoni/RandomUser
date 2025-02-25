@@ -37,6 +37,13 @@
 			);
 			target = 870BB71B2D69AB41001F78D5 /* RamdomUser */;
 		};
+		87762A532D6DF5930010FCAD /* Exceptions for "RamdomUser" folder in "RamdomUserTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/RamdomUser.xcdatamodeld,
+			);
+			target = 870BB7342D69AB43001F78D5 /* RamdomUserTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +51,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				870BB7472D69AB44001F78D5 /* Exceptions for "RamdomUser" folder in "RamdomUser" target */,
+				87762A532D6DF5930010FCAD /* Exceptions for "RamdomUser" folder in "RamdomUserTests" target */,
 			);
 			path = RamdomUser;
 			sourceTree = "<group>";
