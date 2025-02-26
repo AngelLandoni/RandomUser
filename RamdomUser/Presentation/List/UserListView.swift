@@ -20,7 +20,9 @@ struct UserListView: View {
                             UserRow(name: user.name, surname: user.surname, picture: user.thumbnail)
                         }
                         .onAppear {
-                            viewModel.onNewCellAppear(userID: user.id)
+                            Task.detached {
+                                await viewModel.onNewCellAppear(userID: user.id)
+                            }
                         }
                     }
                     .onDelete { index in

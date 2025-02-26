@@ -66,7 +66,7 @@ class UserListViewModel: ObservableObject {
         syncFilteredUsers()
     }
     
-    func onNewCellAppear(userID: String) {
+    func onNewCellAppear(userID: String) async {
         guard searchText.isEmpty else {
             shouldShowLoadingRow = false
             return
@@ -75,9 +75,7 @@ class UserListViewModel: ObservableObject {
         
         shouldShowLoadingRow = true
         
-        Task.detached {
-            await self.loadExtraUsers()
-        }
+        await self.loadExtraUsers()
         
         shouldShowLoadingRow = false
     }
