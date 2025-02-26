@@ -67,17 +67,14 @@ class UserListViewModel: ObservableObject {
     }
     
     func onNewCellAppear(userID: String) async {
-        guard searchText.isEmpty else {
-            shouldShowLoadingRow = false
-            return
-        }
+        defer { shouldShowLoadingRow = false }
+        
+        guard searchText.isEmpty else { return }
         guard userID == filteredUsers.last?.id else { return }
         
         shouldShowLoadingRow = true
         
         await self.loadExtraUsers()
-        
-        shouldShowLoadingRow = false
     }
     
     func retryLoadExtraUsers() async {
